@@ -5,6 +5,9 @@ node_modules
 .env
 .env.local
 .env.development.local
+/.env
+/.env.local
+/.env.development.local
 
 # ignore .next folder
 .next
@@ -18,3 +21,4 @@ node_modules
 
 # ignore .DS_Store
 .DS_Store
+/.DS_Store
