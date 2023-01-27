@@ -4,6 +4,7 @@ const form = document.querySelector("form");
 
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    showSpinner();
     const data = new FormData(form);
 
     const response = await fetch("http://localhost:8080/dream", {
@@ -16,8 +17,30 @@ form.addEventListener("submit", async (e) => {
         }),
     });
 
-    const { image } = await response.json();
+    if (response.ok) {
+        const { image } = await response.json();
 
-    const result = document.querySelector("#result");;
-    result.innerHTML = `<img src="${image}" alt="${data.get('prompt')}" width="512" />`;
+        const result = document.querySelector("#result");;
+        result.innerHTML = `<img src="${image}" alt="${data.get('prompt')}" width="512" />`;
+    } else {
+        const err = await response.text();
+        alert(err);
+        console.error(err);
+    }
+
+    hideSpinner();
 })
+
+
+function showSpinner() {
+    const button = document.querySelector('button');
+    button.disabled = true;
+    button.innerHTML = 'Dreaming... <span class="spinner">😴</span>'
+
+}
+
+function hideSpinner() {
+    const button = document.querySelector("button")
+    button.disabled = false;
+    button.innerHTML = 'Dream again'
+}
