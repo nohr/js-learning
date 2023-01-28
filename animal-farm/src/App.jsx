@@ -1,9 +1,6 @@
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function Animal({ type, name, age, id }) {
-  // remove bullet points from list
-
   return (
     <li
       style={{
@@ -17,33 +14,43 @@ function Animal({ type, name, age, id }) {
   );
 }
 
-function useAnimalSearch() {
+function useAnimalSearch(value, delay = 500) {
   const [animals, setAnimals] = useState([]);
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(timeout);
+  }, [value, delay]);
+
+  const search = async (q) => {
+    const res = await fetch(
+      "http://localhost:8080?" + new URLSearchParams({ q })
+    );
+    const data = await res.json();
+    setAnimals(data);
+
+    localStorage.setItem("lastQuery", q);
+  };
 
   useEffect(() => {
     const lastQuery = localStorage.getItem("lastQuery");
     search(lastQuery);
   }, []);
 
-  const search = async (q) => {
-    try {
-      const res = await fetch(
-        "http://localhost:8080?" + new URLSearchParams({ q })
-      );
-      const data = await res.json();
-      setAnimals(data);
+  useEffect(() => {
+    debouncedValue !== "" ? search(debouncedValue) : setAnimals([]);
+  }, [debouncedValue]);
 
-      localStorage.setItem("lastQuery", q);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  return { search, animals };
+  return { animals };
 }
 
 function App() {
-  const { search, animals } = useAnimalSearch();
+  const [query, setQuery] = useState("");
+  const { animals } = useAnimalSearch(query);
 
   return (
     <div>
@@ -52,16 +59,30 @@ function App() {
         <input
           type="text"
           placeholder="Search for an animal"
-          onChange={(e) => search(e.target.value)}
+          onChange={(e) => setQuery(e.target.value)}
         />
         <ul>
           {animals.map((animal) => (
             <Animal {...animal} key={animal.id} />
           ))}
           {animals.length === 0 ? (
-            <li>
-              <strong>No animals found</strong>
-            </li>
+            query.length > 0 ? (
+              <li
+                style={{
+                  listStyle: "none",
+                }}
+              >
+                <strong>No animals found</strong>
+              </li>
+            ) : (
+              <li
+                style={{
+                  listStyle: "none",
+                }}
+              >
+                <strong>Results will show here</strong>
+              </li>
+            )
           ) : null}
         </ul>
       </main>
